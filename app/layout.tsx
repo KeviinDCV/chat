@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Llama · Chat",
-  description: "Un chat hermoso en rojo y amarillo",
+  title: "K&G · Chat",
+  description: "Chat privado entre K y G",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Llama Chat",
+    title: "K&G",
   },
 };
 

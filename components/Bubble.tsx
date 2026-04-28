@@ -5,17 +5,19 @@ import type { Message } from "@/lib/storage";
 
 type Props = {
   msg: Message;
+  myName: "K" | "G";
   showTime?: boolean;
+  pending?: boolean;
 };
 
-export default function Bubble({ msg, showTime }: Props) {
-  const mine = msg.role === "me";
+export default function Bubble({ msg, myName, showTime, pending }: Props) {
+  const mine = msg.sender === myName;
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 14, scale: 0.6 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      animate={{ opacity: pending ? 0.6 : 1, y: 0, scale: 1 }}
       transition={{
         type: "spring",
         stiffness: 520,
@@ -40,10 +42,8 @@ export default function Bubble({ msg, showTime }: Props) {
         {showTime && (
           <div className={`text-[10px] mt-1 px-1 ${mine ? "text-flame-700/70" : "text-flame-700/60"}`}>
             {formatTime(msg.ts)}
-            {mine && msg.status && (
-              <span className="ml-1">
-                {msg.status === "sending" ? "·" : msg.status === "sent" ? "✓" : "✓✓"}
-              </span>
+            {mine && (
+              <span className="ml-1">{pending ? "·" : "✓"}</span>
             )}
           </div>
         )}

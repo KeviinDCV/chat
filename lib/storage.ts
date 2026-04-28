@@ -1,61 +1,53 @@
 "use client";
 
-export type Role = "me" | "bot";
+export type Sender = "K" | "G";
 
 export type Message = {
   id: string;
-  role: Role;
+  sender: Sender;
   text: string;
   ts: number;
-  status?: "sending" | "sent" | "read";
 };
 
-export type ChatState = {
+export type ChatCache = {
   messages: Message[];
   updatedAt: number;
 };
 
-const KEY = "llama-chat:v1";
-// Plazo corto: los mensajes viven 24h desde su creación.
+const KEY = "kg-chat:cache:v2";
+// Plazo corto: los mensajes viven 24 h
 export const MESSAGE_TTL_MS = 24 * 60 * 60 * 1000;
-
-export function uid(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
 
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";
 }
 
-export function loadState(): ChatState {
-  if (!isBrowser()) return { messages: [], updatedAt: Date.now() };
+export function loadCache(): ChatCache {
+  if (!isBrowser()) return { messages: [], updatedAt: 0 };
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return { messages: [], updatedAt: Date.now() };
-    const parsed = JSON.parse(raw) as ChatState;
+    if (!raw) return { messages: [], updatedAt: 0 };
+    const parsed = JSON.parse(raw) as ChatCache;
     const now = Date.now();
     const fresh = (parsed.messages || []).filter(
       (m) => now - m.ts < MESSAGE_TTL_MS
     );
-    return { messages: fresh, updatedAt: parsed.updatedAt ?? now };
+    return { messages: fresh, updatedAt: parsed.updatedAt ?? 0 };
   } catch {
-    return { messages: [], updatedAt: Date.now() };
+    return { messages: [], updatedAt: 0 };
   }
 }
 
-export function saveState(state: ChatState) {
+export function saveCache(cache: ChatCache) {
   if (!isBrowser()) return;
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    localStorage.setItem(KEY, JSON.stringify(cache));
   } catch {
     // ignore quota errors
   }
 }
 
-export function clearState() {
+export function clearCache() {
   if (!isBrowser()) return;
   localStorage.removeItem(KEY);
 }

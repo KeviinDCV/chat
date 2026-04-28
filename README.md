@@ -1,35 +1,56 @@
-# Llama · Chat 🌶️💛
+# K&G · Chat 🌶️💛
 
-Un chat hermoso en rojo y amarillo, listo para Vercel.
+Chat privado entre dos personas (K y G), en rojo y amarillo. Listo para Vercel.
 
-- Mobile-first, en escritorio simula un celular centrado y pequeño.
-- Animaciones tipo iMessage: burbujas con resorte, indicador de "escribiendo…", botón de envío que aparece con muelle.
-- El estado se persiste en `localStorage` y se guarda al apagarse la pantalla, cambiar de pestaña o cerrar el navegador.
-- Los mensajes viven 24 h (plazo corto). Pasado ese tiempo se descartan automáticamente al cargar.
-- 100 % gratis: no necesita base de datos ni servicios externos.
+- Marco tipo iPhone en escritorio (centrado, no gigante).
+- Animaciones tipo iMessage: burbujas con resorte, indicador de "escribiendo…", botón de envío con muelle.
+- Indicador de **personas conectadas** en el header (pastilla verde con conteo `n/2`).
+- **Presencia y "está escribiendo…" en tiempo casi-real** vía polling cada 2.5 s.
+- Persistencia local: el caché sobrevive a apagado de pantalla, cambio de pestaña o cierre.
+- Los mensajes viven 24 h en el servidor (plazo corto).
+- 100 % gratis: usa Upstash Redis (plan free).
 
-## Desarrollo
+## Stack
+
+- Next.js 14 (App Router) + React 18 + TypeScript
+- Tailwind CSS + Framer Motion
+- Upstash Redis (capa de datos)
+- API Routes en Edge Runtime
+
+## Configurar Upstash en Vercel (2 minutos)
+
+1. En Vercel, abre tu proyecto → pestaña **Storage** → **Create Database**.
+2. Elige **Upstash → Redis**, plan **Free**.
+3. Vercel inyectará automáticamente las variables de entorno (`KV_REST_API_URL`, `KV_REST_API_TOKEN`) en tu proyecto.
+4. **Redeploy** desde la pestaña Deployments para que las cojan las nuevas funciones.
+
+> Si prefieres usar Upstash directo (sin marketplace), también puedes definir manualmente `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
+
+## Desarrollo local
 
 ```bash
 npm install
+# crea un .env.local con las credenciales de Upstash:
+# KV_REST_API_URL=...
+# KV_REST_API_TOKEN=...
 npm run dev
 ```
 
 Abre http://localhost:3000.
 
-## Desplegar a Vercel
+## Cómo funciona
 
-1. Sube este directorio a un repo (GitHub, GitLab, Bitbucket).
-2. Entra a https://vercel.com/new e importa el repo.
-3. Acepta los valores por defecto (framework: Next.js).
-4. Click en **Deploy** y listo.
-
-No requiere variables de entorno.
+- En el primer arranque, cada dispositivo elige **K** o **G** (se guarda en `localStorage`).
+- Cada 2.5 s (visible) o 30 s (oculto) hace `POST /api/sync` con `{deviceId, name, lastTs, typing}`.
+- El servidor guarda la presencia en un Hash (`kg:presence`) con ventana de 15 s y devuelve los mensajes nuevos del Sorted Set (`kg:messages`).
+- `POST /api/send` añade el mensaje al Sorted Set, recorta los antiguos (>24 h) y limita a 300 mensajes.
+- El cliente hace **optimistic update**: la burbuja aparece al instante (con `·`), y se confirma (`✓`) cuando el servidor responde.
 
 ## Estructura
 
-- `app/` — App Router (layout + página principal).
-- `components/` — `PhoneFrame`, `Header`, `Chat`, `Bubble`, `Composer`, `TypingIndicator`.
-- `lib/storage.ts` — persistencia local con TTL.
-- `lib/bot.ts` — respuestas del compañero virtual.
-- `tailwind.config.ts` — paleta `flame` (rojos y ámbares) + animaciones.
+- `app/` — layout, página, rutas API (`/api/sync`, `/api/send`).
+- `components/` — `PhoneFrame`, `Header`, `Chat`, `Bubble`, `Composer`, `TypingIndicator`, `NamePrompt`.
+- `lib/redis.ts` — cliente Upstash + claves + TTLs.
+- `lib/identity.ts` — selección persistente de K o G.
+- `lib/storage.ts` — caché local con TTL.
+- `tailwind.config.ts` — paleta `flame` y animaciones.

@@ -32,8 +32,8 @@ const config: Config = {
         ],
       },
       boxShadow: {
-        "phone": "0 30px 80px -20px rgba(0,0,0,0.55), 0 8px 24px -8px rgba(255,80,30,0.35)",
-        "bubble": "0 1px 1px rgba(0,0,0,0.06), 0 4px 14px -6px rgba(200,35,26,0.35)",
+        "phone": "0 24px 64px -28px rgba(15,15,15,0.18), 0 6px 18px -10px rgba(15,15,15,0.10)",
+        "bubble": "0 1px 1px rgba(0,0,0,0.04), 0 4px 14px -8px rgba(200,35,26,0.25)",
       },
       animation: {
         "pop": "pop 380ms cubic-bezier(.2,.9,.25,1.4)",

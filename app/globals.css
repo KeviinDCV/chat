@@ -95,12 +95,12 @@ body {
   animation: shimmer 6s linear infinite;
 }
 
-/* Subtle confetti gradient on app background inside the phone */
+/* Interior del chat: blanco para no cansar la vista, con un toque cálido casi imperceptible */
 .phone-bg {
   background:
-    radial-gradient(800px 400px at 100% -10%, rgba(255, 209, 102, 0.85), transparent 60%),
-    radial-gradient(700px 500px at -10% 110%, rgba(239, 74, 24, 0.75), transparent 55%),
-    linear-gradient(180deg, #fff7e6 0%, #fff1d6 45%, #ffe1c2 100%);
+    radial-gradient(420px 220px at 100% -10%, rgba(255, 209, 102, 0.10), transparent 60%),
+    radial-gradient(420px 280px at -10% 110%, rgba(239, 74, 24, 0.07), transparent 55%),
+    #ffffff;
 }
 
 /* Prevent zoom on iOS input focus */

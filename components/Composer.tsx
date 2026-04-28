@@ -51,7 +51,7 @@ export default function Composer({ onSend, onTypingChange }: Props) {
   return (
     <div className="glass safe-bottom sticky bottom-0 z-20 border-t border-flame-200/60">
       <div className="px-3 py-2.5 flex items-end gap-2">
-        <div className="flex-1 flex items-end bg-white/85 ring-1 ring-flame-200 rounded-3xl px-3.5 py-1.5 focus-within:ring-flame-400 transition">
+        <div className="flex-1 flex items-end bg-flame-50/80 ring-1 ring-flame-200/70 rounded-3xl px-3.5 py-1.5 focus-within:ring-flame-400 focus-within:bg-flame-50 transition">
           <textarea
             ref={taRef}
             rows={1}

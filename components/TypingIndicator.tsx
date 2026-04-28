@@ -12,7 +12,7 @@ export default function TypingIndicator() {
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
       className="flex justify-start"
     >
-      <div className="bg-white/95 ring-1 ring-flame-100 shadow-sm rounded-3xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1">
+      <div className="bg-flame-50 ring-1 ring-flame-100/80 rounded-3xl rounded-bl-md px-3.5 py-2.5 flex items-center gap-1">
         <Dot delay={0} />
         <Dot delay={0.15} />
         <Dot delay={0.3} />

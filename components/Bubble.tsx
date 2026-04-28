@@ -33,7 +33,7 @@ export default function Bubble({ msg, myName, showTime, pending }: Props) {
             ${
               mine
                 ? "bg-gradient-to-br from-flame-500 to-flame-700 text-white rounded-br-md shadow-bubble"
-                : "bg-white/95 text-flame-900 rounded-bl-md shadow-sm ring-1 ring-flame-100"
+                : "bg-flame-50 text-flame-900 rounded-bl-md ring-1 ring-flame-100/80"
             }
           `}
         >

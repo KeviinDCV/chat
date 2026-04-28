@@ -13,8 +13,8 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
       <div
         className="
           relative w-full app-h bg-white
-          md:h-[820px] md:max-h-[92vh] md:w-[400px]
-          md:rounded-[40px] md:shadow-phone md:ring-1 md:ring-black/5
+          md:h-[680px] md:max-h-[85vh] md:w-[360px]
+          md:rounded-[36px] md:shadow-phone md:ring-1 md:ring-black/5
           overflow-hidden
         "
       >

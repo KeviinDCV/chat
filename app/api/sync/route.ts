@@ -124,6 +124,7 @@ export async function POST(req: Request) {
     messages,
     presence: Array.from(presenceUsersByName.values()),
     ttlSec: MESSAGE_TTL_SEC,
+    buildId: process.env.NEXT_PUBLIC_BUILD_ID || "",
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Bubble from "./Bubble";
 import Composer from "./Composer";
@@ -26,6 +26,8 @@ type Presence = { name: "K" | "G"; typing: boolean };
 const POLL_VISIBLE_MS = 2500;
 const POLL_HIDDEN_MS = 30_000;
 const TYPING_DEBOUNCE_MS = 1500;
+const RELOAD_GRACE_MS = 4000;
+const CLIENT_BUILD_ID = process.env.NEXT_PUBLIC_BUILD_ID || "";
 
 export default function Chat() {
   const [identity, setIdentity] = useState<Identity | null>(null);
@@ -35,6 +37,7 @@ export default function Chat() {
   const [presence, setPresence] = useState<Presence[]>([]);
   const [iAmTyping, setIAmTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastTsRef = useRef<number>(0);
   const typingResetTO = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -132,7 +135,15 @@ export default function Chat() {
             serverTs: number;
             messages: Message[];
             presence: Presence[];
+            buildId?: string;
           };
+          if (
+            data.buildId &&
+            CLIENT_BUILD_ID &&
+            data.buildId !== CLIENT_BUILD_ID
+          ) {
+            setUpdateAvailable(true);
+          }
           if (data.messages?.length) {
             setCache((prev) => mergeMessages(prev, data.messages));
             const maxTs = data.messages.reduce(
@@ -174,6 +185,33 @@ export default function Chat() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [hydrated, identity]);
+
+  // Reload automático cuando hay deploy nuevo
+  useEffect(() => {
+    if (!updateAvailable) return;
+    const doReload = () => {
+      saveCache(cache); // por si acaso
+      window.location.reload();
+    };
+    // Si la pestaña está oculta, recarga ya (silencioso)
+    if (document.hidden) {
+      doReload();
+      return;
+    }
+    // Si está visible, espera unos segundos para que vea el banner
+    const t = setTimeout(doReload, RELOAD_GRACE_MS);
+    const onHide = () => {
+      if (document.hidden) {
+        clearTimeout(t);
+        doReload();
+      }
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("visibilitychange", onHide);
+    };
+  }, [updateAvailable, cache]);
 
   // Latch para typing accesible desde el polling
   const iAmTypingRef = useRef(false);
@@ -292,6 +330,10 @@ export default function Chat() {
         />
       )}
 
+      <AnimatePresence>
+        {updateAvailable && <UpdateBanner key="update" />}
+      </AnimatePresence>
+
       <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto scroll-clean px-3 py-3 space-y-1.5"
@@ -327,6 +369,27 @@ export default function Chat() {
 
       {!identity && <NamePrompt onPick={handlePickName} />}
     </div>
+  );
+}
+
+function UpdateBanner() {
+  return (
+    <motion.div
+      initial={{ y: -30, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -30, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26 }}
+      className="absolute top-0 left-0 right-0 z-30 flex justify-center pointer-events-none safe-top"
+    >
+      <div className="mt-14 px-3.5 py-2 rounded-full bg-flame-700/95 text-white text-[12px] font-medium shadow-bubble flex items-center gap-2">
+        <motion.span
+          className="block h-2 w-2 rounded-full bg-yellow-300"
+          animate={{ scale: [1, 1.4, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+        />
+        Nueva versión — recargando…
+      </div>
+    </motion.div>
   );
 }
 

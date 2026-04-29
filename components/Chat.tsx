@@ -41,6 +41,8 @@ export default function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastTsRef = useRef<number>(0);
   const typingResetTO = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountTsRef = useRef<number>(0);
+  const presenceKeyRef = useRef<string>("");
 
   // Hydration: identity + cache
   useEffect(() => {
@@ -49,6 +51,7 @@ export default function Chat() {
     const c = loadCache();
     setCache(c);
     lastTsRef.current = c.messages.reduce((m, x) => Math.max(m, x.ts), 0);
+    mountTsRef.current = Date.now();
     setHydrated(true);
   }, []);
 
@@ -159,7 +162,15 @@ export default function Chat() {
               return next;
             });
           }
-          setPresence(data.presence ?? []);
+          const incomingPresence = data.presence ?? [];
+          const key = incomingPresence
+            .map((p) => `${p.name}:${p.typing ? 1 : 0}`)
+            .sort()
+            .join("|");
+          if (key !== presenceKeyRef.current) {
+            presenceKeyRef.current = key;
+            setPresence(incomingPresence);
+          }
         }
       } catch {
         // red caída — reintentamos en el próximo tick
@@ -304,10 +315,16 @@ export default function Chat() {
   }, []);
 
   const messagesWithMeta = useMemo(() => {
+    const mountTs = mountTsRef.current;
     return cache.messages.map((m, i, arr) => {
       const next = arr[i + 1];
       const isLastOfRun = !next || next.sender !== m.sender;
-      return { msg: m, showTime: isLastOfRun, pending: pendingIds.has(m.id) };
+      return {
+        msg: m,
+        showTime: isLastOfRun,
+        pending: pendingIds.has(m.id),
+        animateIn: m.ts >= mountTs,
+      };
     });
   }, [cache.messages, pendingIds]);
 
@@ -350,13 +367,14 @@ export default function Chat() {
         )}
         <AnimatePresence initial={false}>
           {identity &&
-            messagesWithMeta.map(({ msg, showTime, pending }) => (
+            messagesWithMeta.map(({ msg, showTime, pending, animateIn }) => (
               <Bubble
                 key={msg.id}
                 msg={msg}
                 myName={identity.name}
                 showTime={showTime}
                 pending={pending}
+                animateIn={animateIn}
               />
             ))}
           {otherTyping && <TypingIndicator key="typing" />}

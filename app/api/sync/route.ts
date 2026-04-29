@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getRedis,
+  INITIAL_MESSAGES,
   KEYS,
   MESSAGE_TTL_SEC,
   PRESENCE_WINDOW_MS,
@@ -68,10 +69,15 @@ export async function POST(req: Request) {
   const pipeline = redis.pipeline();
   pipeline.hset(KEYS.presence, { [body.deviceId]: JSON.stringify(presenceEntry) });
   pipeline.expire(KEYS.presence, 600);
-  pipeline.zrange(KEYS.messages, `(${body.lastTs}`, "+inf", {
-    byScore: true,
-    withScores: false,
-  });
+  if (body.lastTs <= 0) {
+    // Carga inicial: solo los N mensajes más recientes (orden ascendente)
+    pipeline.zrange(KEYS.messages, -INITIAL_MESSAGES, -1);
+  } else {
+    pipeline.zrange(KEYS.messages, `(${body.lastTs}`, "+inf", {
+      byScore: true,
+      withScores: false,
+    });
+  }
   pipeline.hgetall(KEYS.presence);
 
   const [, , rawMessages, rawPresence] = (await pipeline.exec()) as [

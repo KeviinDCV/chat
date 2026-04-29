@@ -64,3 +64,5 @@ export const MESSAGE_TTL_SEC = 24 * 60 * 60;
 export const PRESENCE_WINDOW_MS = 15_000;
 // Máximo de mensajes que conservamos
 export const MAX_MESSAGES = 300;
+// En carga inicial (lastTs=0) sólo enviamos los más recientes
+export const INITIAL_MESSAGES = 50;

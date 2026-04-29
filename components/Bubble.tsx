@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import type { Message } from "@/lib/storage";
 
@@ -8,15 +9,15 @@ type Props = {
   myName: "K" | "G";
   showTime?: boolean;
   pending?: boolean;
+  animateIn?: boolean;
 };
 
-export default function Bubble({ msg, myName, showTime, pending }: Props) {
+function Bubble({ msg, myName, showTime, pending, animateIn = true }: Props) {
   const mine = msg.sender === myName;
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: 14, scale: 0.6 }}
+      initial={animateIn ? { opacity: 0, y: 14, scale: 0.6 } : false}
       animate={{ opacity: pending ? 0.6 : 1, y: 0, scale: 1 }}
       transition={{
         type: "spring",
@@ -56,3 +57,5 @@ function formatTime(ts: number) {
   const d = new Date(ts);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
+
+export default memo(Bubble);

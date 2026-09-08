@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <title>Notas</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Simulador de celular, centrado en pantalla -->
+  <div class="phone" id="phone">
+    <div class="notch"></div>
+
+    <!-- ====== PANTALLA: INGRESO DE NOMBRE ====== -->
+    <section class="screen login" id="loginScreen">
+      <div class="login-inner">
+        <div class="logo">💬</div>
+        <h1>Bienvenido</h1>
+        <p class="subtitle">Escribe tu nombre para entrar</p>
+        <form id="loginForm" autocomplete="off">
+          <input
+            id="nameInput"
+            type="text"
+            placeholder="Tu nombre"
+            maxlength="24"
+            required
+          />
+          <button type="submit">Entrar</button>
+        </form>
+        <p class="hint">Tu nombre se mostrará a las demás personas.</p>
+      </div>
+    </section>
+
+    <!-- ====== PANTALLA: CHAT ====== -->
+    <section class="screen chat hidden" id="chatScreen">
+      <!-- Encabezado estilo WhatsApp -->
+      <header class="chat-header">
+        <div class="chat-title">
+          <div class="people" id="peopleLine">…</div>
+          <div class="status" id="statusLine">conectando…</div>
+        </div>
+        <button class="icon-btn" id="usersBtn" title="Conectados" aria-label="Conectados">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05C16.16 13.6 17 14.5 17 16.5V19h7v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </button>
+        <button class="icon-btn" id="logoutBtn" title="Salir" aria-label="Salir">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        </button>
+      </header>
+
+      <!-- Panel de conectados -->
+      <div class="users-panel hidden" id="usersPanel">
+        <div class="users-panel-title">En línea</div>
+        <ul id="usersList"></ul>
+      </div>
+
+      <!-- Mensajes -->
+      <div class="messages" id="messages">
+        <div class="day-sep"><span>Hoy</span></div>
+      </div>
+
+      <!-- Selector de emojis -->
+      <div class="emoji-panel hidden" id="emojiPanel"></div>
+
+      <!-- Barra de escritura -->
+      <form class="composer" id="composer" autocomplete="off">
+        <button type="button" class="icon-btn round" id="emojiBtn" title="Emojis" aria-label="Emojis">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg>
+        </button>
+        <button type="button" class="icon-btn round" id="imageBtn" title="Enviar imagen" aria-label="Enviar imagen">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </button>
+        <input type="file" id="fileInput" accept="image/*" hidden />
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="Escribe un mensaje…"
+          maxlength="1000"
+          autocomplete="off"
+        />
+        <button type="submit" class="send-btn" id="sendBtn" title="Enviar" aria-label="Enviar">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </form>
+    </section>
+
+    <!-- Aviso si falta configurar Firebase -->
+    <div class="config-warning hidden" id="configWarning">
+      <div>
+        <strong>Falta configurar Firebase.</strong>
+        <p>Abre <code>js/firebase-config.js</code> y pega los datos de tu proyecto. Mira el <code>README.md</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase (SDK compat desde CDN oficial) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+  <!-- Configuración y app -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

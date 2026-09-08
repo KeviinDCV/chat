@@ -4,7 +4,7 @@
     {
       "name": "chat",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "serve", ".", "-l", "4321"],
+      "runtimeArgs": ["--yes", "vercel", "dev", "--listen", "4321"],
       "port": 4321
     }
   ]

@@ -202,6 +202,39 @@
     sync();
   }
 
+  /**
+   * Avisa que me voy, para desaparecer de la lista al instante en
+   * vez de esperar a que caduque la presencia.
+   *
+   * sendBeacon es lo único fiable aquí: al cerrar la pestaña el
+   * navegador cancela las peticiones normales, pero un beacon se
+   * entrega igual. keepalive es el plan B.
+   */
+  function leave() {
+    if (!myId || !myName) return;
+    const payload = JSON.stringify({ uid: myId, name: myName });
+
+    try {
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        if (navigator.sendBeacon("/api/leave", blob)) return;
+      }
+    } catch (err) {
+      // cae al plan B
+    }
+
+    try {
+      fetch("/api/leave", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      }).catch(function () {});
+    } catch (err) {
+      // nada más que hacer: caducará sola en 30 s
+    }
+  }
+
   function setConnected(ok) {
     connected = ok;
     el.statusLine.classList.toggle("live", ok);
@@ -513,6 +546,7 @@
 
     el.logoutBtn.addEventListener("click", function () {
       if (!confirm("¿Salir del chat?")) return;
+      leave(); // antes de apagar nada: leave() necesita el nombre
       started = false;
       clearTimeout(pollTimer);
       localStorage.removeItem("chat_name");
@@ -539,6 +573,12 @@
         bumpActivity();
         syncNow();
       }
+    });
+
+    // Cerrar la pestaña, recargar o irse a otra página.
+    // pagehide es el evento fiable (funciona también en móviles).
+    window.addEventListener("pagehide", function () {
+      if (started) leave();
     });
   }
 

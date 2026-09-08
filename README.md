@@ -19,6 +19,7 @@ Todo funciona con el plan **gratuito** de Vercel y el de **Upstash Redis**.
 | `index.html`, `css/`, `js/` | La interfaz. Sin dependencias ni build. |
 | `api/sync.js` | Latido de presencia + mensajes nuevos + quién escribe. |
 | `api/send.js` | Guarda un mensaje y recorta el historial. |
+| `api/leave.js` | Saca a alguien de la lista al salir, sin esperar. |
 | `lib/redis.js` | Acceso a Upstash por su API REST (solo `fetch`). |
 
 Las funciones de Vercel no mantienen conexiones abiertas, así que el navegador
@@ -95,6 +96,11 @@ entorno solo y todo funciona igual que en producción.
 Aparecer «en línea» significa **tener la pestaña a la vista**. Si la dejas en
 segundo plano, el chat deja de consultar (para ahorrar cuota) y a los 30 s
 desapareces de la lista. Al volver, reapareces al instante.
+
+Cuando alguien **cierra la pestaña o pulsa Salir**, desaparece de inmediato: el
+navegador avisa al servidor con `sendBeacon`, que se entrega aunque la página ya
+se esté cerrando. La caducidad de 30 s queda solo como red de seguridad para
+cierres bruscos — que se acabe la batería, se caiga la red o falle el navegador.
 
 ## Personalizar
 

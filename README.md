@@ -93,6 +93,23 @@ entorno solo y todo funciona igual que en producción.
 - 😀 abre el selector de emojis.
 - El icono de salida borra tu nombre y vuelve a la pantalla de ingreso.
 
+## Ventana mini (para que ocupe poco)
+
+Chrome **no deja encoger sus ventanas por debajo de 500 px de ancho** en Windows
+(400 en Mac). Es un límite del propio navegador: ninguna página puede saltárselo,
+y tampoco ayuda instalar la app, porque las ventanas de PWA tienen el mismo tope.
+
+Por eso está el botón **⧉** del encabezado: abre el chat en una ventana de
+*Picture-in-Picture*, que no es una ventana de navegador y por tanto sí puede ser
+diminuta — además se queda flotando por encima de las demás aplicaciones.
+
+El botón solo aparece si el navegador lo admite (Chrome y Edge 116+). Al cerrar
+esa ventana, el chat vuelve solo a la pestaña.
+
+El diseño se adapta hasta tamaños muy pequeños: por debajo de 520 px de alto o
+360 px de ancho, el marco del celular desaparece y el chat ocupa todo el hueco.
+Está probado y sigue siendo usable a **240 × 190 px**.
+
 Aparecer «en línea» significa **tener la pestaña a la vista**. Si la dejas en
 segundo plano, el chat deja de consultar (para ahorrar cuota) y a los 30 s
 desapareces de la lista. Al volver, reapareces al instante.

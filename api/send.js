@@ -19,11 +19,8 @@ import {
 
 /** Imagen en base64, ya comprimida por el navegador. */
 const IMAGE_RE = /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+// Vercel admite hasta 4,5 MB por petición; nos quedamos muy por debajo.
 const MAX_IMAGE_CHARS = 700000; // ~700 KB
-
-export const config = {
-  api: { bodyParser: { sizeLimit: "1mb" } },
-};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

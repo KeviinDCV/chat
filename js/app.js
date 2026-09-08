@@ -100,6 +100,12 @@
     lastActivity = Date.now();
   }
 
+  /** Envía un formulario disparando su evento submit. */
+  function submitForm(form) {
+    if (typeof form.requestSubmit === "function") form.requestSubmit();
+    else form.dispatchEvent(new Event("submit", { cancelable: true }));
+  }
+
   // ---------- Arranque ----------
   function init() {
     myId = getMyId();
@@ -458,6 +464,21 @@
     el.messageInput.addEventListener("input", function () {
       if (el.messageInput.value.trim()) markTyping();
       else typingUntil = 0;
+    });
+
+    // Enter para enviar. El navegador ya lo hace solo, pero algunos
+    // teclados móviles no disparan el envío implícito del formulario.
+    el.messageInput.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        submitForm(el.composer);
+      }
+    });
+    el.nameInput.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        submitForm(el.loginForm);
+      }
     });
 
     el.emojiBtn.addEventListener("click", function () {

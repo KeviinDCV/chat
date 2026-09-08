@@ -1,93 +1,82 @@
 # Chat — simulador de celular
 
-Chat en tiempo real, estilo WhatsApp, dentro de un simulador de celular.
-Blanco y negro, centrado en pantalla y adaptable a cualquier tamaño de navegador.
+Chat estilo WhatsApp dentro de un simulador de celular. Blanco y negro,
+centrado en pantalla y adaptable a cualquier tamaño de navegador.
 
-**Incluye:** ingreso con nombre · mensajes en tiempo real · imágenes · emojis ·
-historial guardado · lista de quién está conectado.
+**Incluye:** ingreso con nombre · mensajes · imágenes · emojis · historial
+guardado · quién está conectado · aviso de «está escribiendo…».
 
-El encabezado no muestra ningún nombre de sala: solo las personas conectadas
-en ese momento.
+El encabezado no muestra ningún nombre de sala: solo las personas conectadas.
 
-Todo funciona con el plan **gratuito** de Firebase y el plan **gratuito** de Vercel.
+Todo funciona con el plan **gratuito** de Vercel y el de **Upstash Redis**.
 
 ---
 
-## Paso 1 — Crear la base de datos (Firebase, gratis)
+## Cómo está hecho
 
-1. Entra a <https://console.firebase.google.com> y pulsa **Agregar proyecto**.
-   (Puedes desactivar Google Analytics, no hace falta.)
-2. En el menú lateral: **Compilación → Realtime Database → Crear base de datos**.
-   - Ubicación: la que quieras.
-   - Elige **Comenzar en modo de prueba**.
-3. Ve a la pestaña **Reglas** de esa base de datos, borra lo que haya y pega el
-   contenido del archivo [`database.rules.json`](database.rules.json). Pulsa **Publicar**.
-4. Arriba a la izquierda, **⚙️ Configuración del proyecto → Tus apps → icono Web `</>`**.
-   Registra la app (cualquier nombre) y copia el bloque `firebaseConfig`.
+| Parte | Qué es |
+|---|---|
+| `index.html`, `css/`, `js/` | La interfaz. Sin dependencias ni build. |
+| `api/sync.js` | Latido de presencia + mensajes nuevos + quién escribe. |
+| `api/send.js` | Guarda un mensaje y recorta el historial. |
+| `lib/redis.js` | Acceso a Upstash por su API REST (solo `fetch`). |
 
-## Paso 2 — Pegar la configuración
+Las funciones de Vercel no mantienen conexiones abiertas, así que el navegador
+**pregunta cada pocos segundos** si hay algo nuevo. Para no gastar la cuota, el
+sondeo se frena solo:
 
-Abre `js/firebase-config.js` y reemplaza los valores por los tuyos:
+| Situación | Cada |
+|---|---|
+| Hay conversación | 2,5 s |
+| Más de 1 min tranquilo | 6 s |
+| Más de 5 min tranquilo | 15 s |
+| La pestaña no se ve | *se detiene* |
 
-```js
-const firebaseConfig = {
-  apiKey: "AIza...",
-  authDomain: "mi-chat.firebaseapp.com",
-  databaseURL: "https://mi-chat-default-rtdb.firebaseio.com",
-  projectId: "mi-chat",
-  storageBucket: "mi-chat.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123"
-};
+El aviso de «escribiendo…» viaja dentro de esa misma consulta, así que **no
+genera ni una petición extra**.
 
-const ROOM_ID = "general";
-```
+---
 
-> **`databaseURL` es obligatorio.** Si no aparece en el bloque que copiaste,
-> tómalo de la pantalla de Realtime Database (arriba, empieza con `https://`).
+## Paso 1 — Conectar Redis (gratis)
 
-Estas claves son públicas por diseño en Firebase Web; quien protege los datos
-son las **reglas** del Paso 1.3.
+1. Entra a <https://vercel.com>, abre tu proyecto y ve a la pestaña **Storage**.
+2. **Create Database → Redis (Upstash) → Continue.**
+3. Elige el plan **Free**, ponle un nombre y créala.
+4. Conéctala al proyecto (**Connect Project**) y marca los tres entornos:
+   *Production*, *Preview* y *Development*.
 
-## Paso 3 — Probar en tu computador
+Vercel añade solo las variables `KV_REST_API_URL` y `KV_REST_API_TOKEN`.
+No hay que escribir ninguna clave a mano ni guardar nada en el repositorio.
 
-Abre `index.html` directamente en el navegador. Ya debería funcionar.
+> Si vas a desplegar antes de tener la base de datos, la app no falla en
+> silencio: muestra el aviso «Falta conectar la base de datos».
 
-Si prefieres un servidor local:
+## Paso 2 — Desplegar
 
-```bash
-npx serve .
-```
-
-## Paso 4 — Subir a GitHub
-
-Desde esta carpeta:
+Si el proyecto ya está importado desde GitHub, basta con subir los cambios:
 
 ```bash
-git init
-git add .
-git commit -m "Chat"
-git branch -M main
-git remote add origin https://github.com/USUARIO/REPO.git
-git push -u origin main
+git add -A && git commit -m "Chat con Redis" && git push
 ```
 
-> **Sí debes subir `js/firebase-config.js`.** Sin ese archivo el chat no
-> funciona en Vercel. Las claves web de Firebase son públicas por diseño
-> (viajan al navegador de todos modos); lo que protege los datos son las
-> **reglas** que publicaste en el Paso 1.3.
->
-> Si prefieres que nadie vea tu configuración, crea el repositorio como
-> **privado**: Vercel igual puede importarlo.
+Si aún no lo has importado: en Vercel, **Add New → Project → Import**, elige el
+repositorio, **Framework Preset: Other**, deja *Build Command* y *Output
+Directory* vacíos y pulsa **Deploy**.
 
-## Paso 5 — Importar el proyecto en Vercel
+> Después de conectar la base de datos, vuelve a desplegar (**Deployments → ⋯ →
+> Redeploy**) para que las funciones reciban las variables nuevas.
 
-1. Entra a <https://vercel.com> y crea una cuenta gratis (entra con GitHub).
-2. **Add New → Project → Import** y elige tu repositorio.
-3. **Framework Preset: Other.** Deja Build Command y Output Directory vacíos.
-4. **Deploy.** En unos segundos tienes la URL.
+## Paso 3 — Probar en tu computador (opcional)
 
-Cada `git push` a `main` vuelve a desplegar solo.
+Ya **no** sirve abrir `index.html` directamente: hacen falta las funciones de
+`/api`. Usa la CLI de Vercel:
+
+```bash
+npx vercel dev
+```
+
+La primera vez te pedirá vincular el proyecto; luego baja las variables de
+entorno solo y todo funciona igual que en producción.
 
 ---
 
@@ -95,36 +84,43 @@ Cada `git push` a `main` vuelve a desplegar solo.
 
 - Al entrar se pide un **nombre**; queda guardado para la próxima visita.
 - El **historial** se carga solo (últimos 200 mensajes).
-- El encabezado muestra **los nombres de quienes están conectados** ahora mismo
-  (tú apareces como «Tú»). Si son muchos, el botón 👥 abre la lista completa.
-- 📷 envía imágenes (se comprimen automáticamente antes de subir).
-  También puedes **pegar** una imagen con `Ctrl+V`.
-- 😀 abre el selector de emojis (también sirve el teclado de tu sistema).
+- El encabezado muestra **quién está conectado** (tú apareces como «Tú»).
+  Si son muchos, el botón 👥 abre la lista completa.
+- Cuando alguien escribe aparece **«… está escribiendo»** y unos puntitos.
+- 📷 envía imágenes; se comprimen antes de subir. También puedes **pegar** una
+  con `Ctrl+V`.
+- 😀 abre el selector de emojis.
 - El icono de salida borra tu nombre y vuelve a la pantalla de ingreso.
+
+Aparecer «en línea» significa **tener la pestaña a la vista**. Si la dejas en
+segundo plano, el chat deja de consultar (para ahorrar cuota) y a los 30 s
+desapareces de la lista. Al volver, reapareces al instante.
 
 ## Personalizar
 
 | Qué | Dónde |
 |---|---|
-| Conversación privada (rama en la base de datos) | `ROOM_ID` en `js/firebase-config.js` |
+| Conversación aparte | variable de entorno `ROOM_ID` en Vercel |
 | Título de la pestaña | `index.html`, etiqueta `<title>` |
 | Colores | variables `:root` en `css/style.css` |
-| Cuántos mensajes se cargan | `MAX_MESSAGES` en `js/app.js` |
-| Calidad/tamaño de imágenes | `IMAGE_MAX_SIDE`, `IMAGE_QUALITY` en `js/app.js` |
+| Ritmo del sondeo | constantes `POLL_*` en `js/app.js` |
+| Cuántos mensajes se guardan | `MAX_MESSAGES` en `lib/redis.js` |
+| Calidad de las imágenes | `IMAGE_*` en `js/app.js` |
 
-`ROOM_ID` no se ve en pantalla: solo decide en qué rama de la base de datos se
-guardan los mensajes. Cámbialo por algo impredecible (`"7f3a91c4"`) si quieres
-separar la conversación; todos deben tener el mismo valor.
+`ROOM_ID` no se ve en pantalla: solo decide en qué rama de Redis se guardan los
+mensajes. Si no la defines, vale `general`.
 
-## Límites del plan gratuito de Firebase
+## Sobre el plan gratuito
 
-- 1 GB de almacenamiento · 10 GB de descarga al mes
-- 100 conexiones simultáneas
+Upstash Free da **500.000 comandos al mes**. Cada consulta gasta 3, así que
+alcanza para unas **140 horas** de una persona con el chat abierto y a la vista.
+Para un grupo pequeño sobra; si se queda corto, sube los valores de `POLL_*`.
 
-Más que suficiente para un chat pequeño. Las imágenes se guardan comprimidas
-dentro de la base de datos, así que evita mandar cientos de fotos grandes.
+Las imágenes se guardan comprimidas dentro de Redis (máx. ~700 KB cada una) y
+desaparecen al salir de los últimos 200 mensajes. Si quieres imágenes grandes o
+permanentes, lo suyo sería añadir **Vercel Blob**.
 
 ## Nota
 
-El chat es abierto: cualquiera con el enlace y el `ROOM_ID` puede leer y escribir.
+El chat es abierto: cualquiera con el enlace puede leer y escribir.
 No lo uses para información sensible.

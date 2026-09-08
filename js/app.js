@@ -30,6 +30,7 @@
     usersPanel: document.getElementById("usersPanel"),
     usersList: document.getElementById("usersList"),
     logoutBtn: document.getElementById("logoutBtn"),
+    miniBtn: document.getElementById("miniBtn"),
     typingRow: document.getElementById("typingRow"),
     configWarning: document.getElementById("configWarning"),
     phone: document.getElementById("phone"),
@@ -57,6 +58,7 @@
   let connected = false;
   let lastSenderId = null;
   let started = false;
+  let pipWindow = null; // ventana mini flotante, si está abierta
 
   // ---------- Utilidades ----------
   function getMyId() {

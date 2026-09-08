@@ -83,6 +83,9 @@ body {
   justify-content: center;
   text-align: center;
   padding: 32px 26px;
+  /* Si la ventana es muy baja, que se pueda desplazar
+     en vez de recortar el botón de entrar. */
+  overflow-y: auto;
 }
 .login-inner { width: 100%; }
 .logo {
@@ -379,4 +382,83 @@ body {
 /* Pantallas grandes: un poco de aire */
 @media (min-height: 900px) {
   .phone { height: 844px; }
+}
+
+/* ============================================================
+   VENTANAS PEQUEÑAS
+   El marco del celular es decorativo: cuando falta sitio,
+   va cediendo espacio hasta desaparecer, para que el chat
+   siga usándose por muy encogida que esté la ventana.
+   ============================================================ */
+
+/* --- Paso 1: apretar el adorno --- */
+@media (max-height: 660px), (max-width: 430px) {
+  body { padding: 8px; }
+  .phone { padding: 8px; --radius: 30px; }
+  .screen { border-radius: 24px; }
+  .notch { width: 100px; height: 20px; top: 10px; }
+  .chat-header { padding-top: 36px; }
+
+  .login { padding: 20px 18px; }
+  .logo {
+    width: 68px; height: 68px;
+    font-size: 36px; border-radius: 22px;
+    margin-bottom: 14px;
+  }
+  .login h1 { font-size: 22px; }
+  .subtitle { margin-bottom: 18px; font-size: 14px; }
+  .hint { margin-top: 14px; }
+}
+
+/* --- Paso 2: fuera el marco, pantalla completa --- */
+@media (max-height: 520px), (max-width: 360px) {
+  body { padding: 0; }
+  .phone {
+    padding: 0;
+    border-radius: 0;
+    max-width: none;
+    height: 100dvh;
+    box-shadow: none;
+  }
+  .screen { border-radius: 0; }
+  .notch { display: none; }
+
+  /* Sin muesca, el encabezado no necesita hueco arriba */
+  .chat-header { padding: 10px 10px 10px 14px; }
+  .messages { padding: 10px 10px 6px; }
+  .emoji-panel { max-height: 150px; }
+
+  .login { padding: 16px; }
+  .logo {
+    width: 54px; height: 54px;
+    font-size: 28px; border-radius: 17px;
+    margin-bottom: 10px;
+  }
+  .login h1 { font-size: 19px; }
+  .subtitle { margin-bottom: 14px; font-size: 13px; }
+  #nameInput, #loginForm button { padding: 11px 14px; font-size: 15px; }
+  .hint { display: none; }
+}
+
+/* --- Paso 3: lo mínimo imprescindible --- */
+@media (max-height: 380px) {
+  .chat-header { padding: 7px 8px 7px 12px; }
+  .people { font-size: 14px; }
+  .status { font-size: 11px; }
+  .day-sep { display: none; }
+  .emoji-panel { max-height: 96px; grid-template-columns: repeat(10, 1fr); }
+  .emoji-panel button { font-size: 19px; padding: 3px 0; }
+  .composer { padding: 5px 6px calc(5px + env(safe-area-inset-bottom)); }
+  .send-btn { width: 36px; height: 36px; }
+  .icon-btn.round { padding: 3px; }
+  .msg { font-size: 14px; padding: 6px 10px; }
+  .users-panel { top: 52px; max-height: 70%; }
+}
+
+/* --- Ventanas muy estrechas: que quepa la barra de escribir --- */
+@media (max-width: 300px) {
+  .composer { gap: 2px; }
+  #messageInput { padding: 9px 12px; font-size: 14px; }
+  .msg { max-width: 86%; }
+  .users-panel { width: auto; left: 8px; right: 8px; }
 }

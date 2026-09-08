@@ -1,0 +1,7 @@
+{
+  "name": "chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Chat en tiempo real con Upstash Redis en Vercel"
+}

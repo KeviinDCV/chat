@@ -57,6 +57,10 @@
       <!-- Mensajes -->
       <div class="messages" id="messages">
         <div class="day-sep"><span>Hoy</span></div>
+        <!-- Puntitos de "escribiendo…"; siempre al final de la lista -->
+        <div class="msg other typing-row hidden" id="typingRow">
+          <span class="dots"><i></i><i></i><i></i></span>
+        </div>
       </div>
 
       <!-- Selector de emojis -->
@@ -84,21 +88,15 @@
       </form>
     </section>
 
-    <!-- Aviso si falta configurar Firebase -->
+    <!-- Aviso si la base de datos no está conectada -->
     <div class="config-warning hidden" id="configWarning">
       <div>
-        <strong>Falta configurar Firebase.</strong>
-        <p>Abre <code>js/firebase-config.js</code> y pega los datos de tu proyecto. Mira el <code>README.md</code>.</p>
+        <strong>Falta conectar la base de datos.</strong>
+        <p>En tu proyecto de Vercel: <code>Storage → Redis</code>. Mira el <code>README.md</code>.</p>
       </div>
     </div>
   </div>
 
-  <!-- Firebase (SDK compat desde CDN oficial) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-
-  <!-- Configuración y app -->
-  <script src="js/firebase-config.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

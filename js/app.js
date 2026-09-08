@@ -145,11 +145,21 @@
     return POLL_ACTIVE;
   }
 
+  /**
+   * ¿Está el chat fuera de la vista?
+   * Si está en la ventana mini, manda esa: la pestaña original
+   * puede estar oculta y aun así el chat se está viendo.
+   */
+  function isHidden() {
+    if (pipWindow && !pipWindow.closed) return pipWindow.document.hidden;
+    return document.hidden;
+  }
+
   function schedule() {
     clearTimeout(pollTimer);
-    // Con la pestaña oculta no se consulta nada: ahorra cuota
+    // Fuera de la vista no se consulta nada: ahorra cuota
     // y es coherente con "en línea = está mirando".
-    if (document.hidden || !started) return;
+    if (isHidden() || !started) return;
     pollTimer = setTimeout(sync, pollDelay());
   }
 
@@ -447,6 +457,79 @@
     el.phone.appendChild(box);
   }
 
+  // ---------- Ventana mini (Picture-in-Picture) ----------
+  /*
+   * Chrome no deja encoger sus ventanas por debajo de ~500 px de ancho,
+   * ni siquiera las de apps instaladas. Una ventana de Picture-in-Picture
+   * no es una ventana de navegador, así que sí puede ser diminuta
+   * (y además se queda flotando encima del resto).
+   */
+  function miniSupported() {
+    return "documentPictureInPicture" in window;
+  }
+
+  /** Lleva los estilos de la página al documento de la ventana mini. */
+  function copyStyles(target) {
+    const charset = target.createElement("meta");
+    charset.setAttribute("charset", "utf-8");
+    target.head.appendChild(charset);
+
+    Array.prototype.forEach.call(document.styleSheets, function (sheet) {
+      try {
+        const css = Array.prototype.map
+          .call(sheet.cssRules, function (r) { return r.cssText; })
+          .join("");
+        const style = target.createElement("style");
+        style.textContent = css;
+        target.head.appendChild(style);
+      } catch (err) {
+        // Hoja de otro origen: no se puede leer, se enlaza
+        if (!sheet.href) return;
+        const link = target.createElement("link");
+        link.rel = "stylesheet";
+        link.href = sheet.href;
+        target.head.appendChild(link);
+      }
+    });
+  }
+
+  async function openMini() {
+    if (!miniSupported() || pipWindow) return;
+
+    try {
+      pipWindow = await window.documentPictureInPicture.requestWindow({
+        width: 360,
+        height: 600,
+      });
+    } catch (err) {
+      pipWindow = null; // cancelado o no permitido
+      return;
+    }
+
+    copyStyles(pipWindow.document);
+    pipWindow.document.title = document.title;
+    // Mover el nodo conserva sus escuchadores de eventos
+    pipWindow.document.body.appendChild(el.phone);
+
+    // Los clics ahora ocurren en el otro documento
+    pipWindow.document.addEventListener("click", onDocumentClick);
+    pipWindow.document.addEventListener("visibilitychange", onVisibilityChange);
+    pipWindow.addEventListener("pagehide", restoreFromMini);
+
+    el.miniBtn.classList.add("hidden");
+    syncNow();
+  }
+
+  /** Devuelve el chat a la pestaña cuando se cierra la ventana mini. */
+  function restoreFromMini() {
+    if (!pipWindow) return;
+    pipWindow = null;
+    document.body.appendChild(el.phone);
+    if (miniSupported()) el.miniBtn.classList.remove("hidden");
+    bumpActivity();
+    syncNow();
+  }
+
   // ---------- Emojis ----------
   const EMOJIS = [
     "😀","😁","😂","🤣","😊","😇","🙂","😉",
@@ -479,6 +562,27 @@
   }
 
   // ---------- Eventos ----------
+  /* Estos dos se enganchan también al documento de la ventana mini,
+     por eso van con nombre en vez de anónimos. */
+  function onDocumentClick(ev) {
+    if (
+      !el.usersPanel.classList.contains("hidden") &&
+      !el.usersPanel.contains(ev.target) &&
+      !el.usersBtn.contains(ev.target)
+    ) {
+      el.usersPanel.classList.add("hidden");
+    }
+  }
+
+  function onVisibilityChange() {
+    if (isHidden()) {
+      clearTimeout(pollTimer);
+    } else if (started) {
+      bumpActivity();
+      syncNow();
+    }
+  }
+
   function bindEvents() {
     el.loginForm.addEventListener("submit", function (ev) {
       ev.preventDefault();
@@ -536,15 +640,7 @@
       el.emojiPanel.classList.add("hidden");
     });
 
-    document.addEventListener("click", function (ev) {
-      if (
-        !el.usersPanel.classList.contains("hidden") &&
-        !el.usersPanel.contains(ev.target) &&
-        !el.usersBtn.contains(ev.target)
-      ) {
-        el.usersPanel.classList.add("hidden");
-      }
-    });
+    document.addEventListener("click", onDocumentClick);
 
     el.logoutBtn.addEventListener("click", function () {
       if (!confirm("¿Salir del chat?")) return;
@@ -567,15 +663,14 @@
       }
     });
 
-    // Al volver a la pestaña: reanudar y consultar ya
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) {
-        clearTimeout(pollTimer);
-      } else if (started) {
-        bumpActivity();
-        syncNow();
-      }
-    });
+    // Al volver a la vista: reanudar y consultar ya
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    // Ventana mini: solo si el navegador la admite
+    if (miniSupported()) {
+      el.miniBtn.classList.remove("hidden");
+      el.miniBtn.addEventListener("click", openMini);
+    }
 
     // Cerrar la pestaña, recargar o irse a otra página.
     // pagehide es el evento fiable (funciona también en móviles).
